@@ -1,6 +1,10 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getCurrentFamily() {
+// Every (app) page independently calls this, and the (app) layout calls it
+// too for the nav shell — without request-level memoization each navigation
+// paid for auth.getUser() + two more round trips *twice* per request.
+export const getCurrentFamily = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -22,4 +26,4 @@ export async function getCurrentFamily() {
     .single();
 
   return { user, member, family };
-}
+});

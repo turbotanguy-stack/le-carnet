@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { uploadPhoto, deletePhoto } from "./actions";
 import { MONTH_NAMES_FR } from "@/lib/calendar";
 import type { Photo } from "@/lib/types";
@@ -108,8 +109,13 @@ export default function PhotosClient({ photos }: { photos: PhotoWithUrl[] }) {
                   className="aspect-square rounded-xl overflow-hidden relative bg-[#C05028] group"
                 >
                   {p.url && !p.is_video && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.url} alt="" className="w-full h-full object-cover" />
+                    <Image
+                      src={p.url}
+                      alt=""
+                      fill
+                      sizes="(max-width: 768px) 33vw, 200px"
+                      className="object-cover"
+                    />
                   )}
                   {p.url && p.is_video && (
                     <video src={p.url} className="w-full h-full object-cover" muted />

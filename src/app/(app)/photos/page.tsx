@@ -13,14 +13,19 @@ export default async function PhotosPage() {
     .eq("family_id", family.id)
     .order("taken_at", { ascending: false });
 
-  const withUrls = await Promise.all(
-    (photos ?? []).map(async (p) => {
-      const { data } = await supabase.storage
+  const { data: signed } = photos?.length
+    ? await supabase.storage
         .from("photos")
-        .createSignedUrl(p.storage_path, 60 * 30);
-      return { ...p, url: data?.signedUrl ?? null };
-    })
-  );
+        .createSignedUrls(
+          photos.map((p) => p.storage_path),
+          60 * 30
+        )
+    : { data: [] };
+  const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+  const withUrls = (photos ?? []).map((p) => ({
+    ...p,
+    url: urlByPath.get(p.storage_path) ?? null,
+  }));
 
   return <PhotosClient photos={withUrls} />;
 }
