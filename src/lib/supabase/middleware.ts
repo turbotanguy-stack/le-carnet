@@ -27,21 +27,26 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() verifies the JWT the same way getUser() does, but can do it
+  // locally (no network round trip) when the project uses asymmetric signing
+  // keys — falling back to the identical server call otherwise. Either way
+  // this is never worse than getUser(), and every avoided round trip matters
+  // more here since Vercel and Supabase are in different regions.
+  // This is only the early-bounce redirect for UX; the actual authorization
+  // boundary is RLS plus each page's own verified getCurrentFamily() call.
+  const { data: claims } = await supabase.auth.getClaims();
 
   const isPublic = PUBLIC_PATHS.some((p) =>
     request.nextUrl.pathname.startsWith(p)
   );
 
-  if (!user && !isPublic) {
+  if (!claims && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublic) {
+  if (claims && isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
