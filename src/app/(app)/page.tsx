@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFamily } from "@/lib/family";
+import InviteCode from "./InviteCode";
 import { dateFR, relativeTime } from "@/lib/format";
 import {
   DocsIcon,
@@ -82,6 +83,8 @@ export default async function HomePage() {
           {member.display_name.slice(0, 1).toUpperCase()}
         </div>
       </div>
+
+      <InviteCode code={family.join_code} />
 
       <div className="rounded-3xl p-5 md:p-6 mb-6 relative overflow-hidden bg-gradient-to-br from-[#E8956D] to-[#C05028]">
         <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />

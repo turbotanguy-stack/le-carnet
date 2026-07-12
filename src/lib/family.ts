@@ -12,15 +12,18 @@ type MemberWithFamily = FamilyMember & {
 //
 // The family_members -> families lookup is a real FK relationship, so it's
 // fetched as one embedded PostgREST query instead of two sequential
-// round trips — with Vercel and Supabase in different regions, every
-// round trip this function avoids is one less cross-region hop per
-// navigation, on top of the request-level dedupe.
+// round trips — every round trip this function avoids is one less hop
+// per navigation, on top of the request-level dedupe.
+//
+// getClaims() verifies the JWT locally against Supabase's cached JWKS
+// (this project uses asymmetric signing keys) instead of getUser()'s
+// unconditional network call to the Auth server. Only the user id is
+// needed here — no caller reads anything else off the returned `user`.
 export const getCurrentFamily = cache(async () => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (!claimsData) return null;
+  const user = { id: claimsData.claims.sub };
 
   const { data } = await supabase
     .from("family_members")
